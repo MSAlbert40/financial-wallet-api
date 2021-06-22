@@ -1,6 +1,7 @@
 package com.evertix.financialwallet.config;
 
 import com.evertix.financialwallet.model.*;
+import com.evertix.financialwallet.model.enums.EExpense;
 import com.evertix.financialwallet.model.enums.ERate;
 import com.evertix.financialwallet.model.enums.ERole;
 import com.evertix.financialwallet.repository.*;
@@ -21,10 +22,11 @@ public class DataLoader {
     private final EnterpriseRepository enterpriseRepository;
     private final TypeRateRepository typeRateRepository;
     private final RateRepository rateRepository;
+    private final TypeExpenseRepository typeExpenseRepository;
 
     public DataLoader(RoleRepository roleRepository, AuthService authService, UserRepository userRepository,
                       EconomicActivityRepository economicActivityRepository, EnterpriseRepository enterpriseRepository,
-                      TypeRateRepository typeRateRepository, RateRepository rateRepository) {
+                      TypeRateRepository typeRateRepository, RateRepository rateRepository, TypeExpenseRepository typeExpenseRepository) {
         this.roleRepository = roleRepository;
         this.authService = authService;
         this.userRepository = userRepository;
@@ -32,6 +34,7 @@ public class DataLoader {
         this.enterpriseRepository = enterpriseRepository;
         this.typeRateRepository = typeRateRepository;
         this.rateRepository = rateRepository;
+        this.typeExpenseRepository = typeExpenseRepository;
         this.loadData();
     }
 
@@ -42,6 +45,14 @@ public class DataLoader {
         this.addEnterprises();
         this.addTypeRates();
         this.addRates();
+        this.addTypeExpenses();
+    }
+
+    private void addTypeExpenses() {
+        this.typeExpenseRepository.saveAll(Arrays.asList(
+                new TypeExpense(EExpense.EXPENSE_INITIAL),
+                new TypeExpense(EExpense.EXPENSE_FINAL)
+        ));
     }
 
     private void addRates() {
