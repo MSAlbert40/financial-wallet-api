@@ -12,5 +12,5 @@ public class SaveEnterpriseRequest {
     private String phone;
     private String address;
     private String manageName;
-    private String economicActivityName;
+    private String economicActivity;
 }

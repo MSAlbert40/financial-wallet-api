@@ -2,15 +2,14 @@ package com.evertix.financialwallet.service.impl;
 
 import com.evertix.financialwallet.controller.commons.MessageResponse;
 import com.evertix.financialwallet.controller.constants.ResponseConstants;
-import com.evertix.financialwallet.model.EconomicActivity;
-import com.evertix.financialwallet.model.Enterprise;
-import com.evertix.financialwallet.model.User;
-import com.evertix.financialwallet.model.dto.SaveEnterpriseRequest;
-import com.evertix.financialwallet.model.request.EnterpriseRequest;
-import com.evertix.financialwallet.repository.EconomicActivityRepository;
-import com.evertix.financialwallet.repository.EnterpriseRepository;
-import com.evertix.financialwallet.repository.UserRepository;
-import com.evertix.financialwallet.service.EnterpriseService;
+import com.evertix.financialwallet.model.Rate;
+import com.evertix.financialwallet.model.TypeRate;
+import com.evertix.financialwallet.model.dto.SaveRateRequest;
+import com.evertix.financialwallet.model.enums.ERate;
+import com.evertix.financialwallet.model.request.RateRequest;
+import com.evertix.financialwallet.repository.RateRepository;
+import com.evertix.financialwallet.repository.TypeRateRepository;
+import com.evertix.financialwallet.service.RateService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,28 +23,25 @@ import java.io.StringWriter;
 import java.util.List;
 
 @Service
-public class EnterpriseServiceImpl implements EnterpriseService {
+public class RateServiceImpl implements RateService {
     @Autowired
     ModelMapper modelMapper;
 
     @Autowired
-    UserRepository userRepository;
+    TypeRateRepository typeRateRepository;
 
     @Autowired
-    EconomicActivityRepository economicActivityRepository;
-
-    @Autowired
-    EnterpriseRepository enterpriseRepository;
+    RateRepository rateRepository;
 
     @Override
-    public ResponseEntity<MessageResponse> getAllEnterprises(Long managerId) {
+    public ResponseEntity<MessageResponse> getAllRate() {
         try {
-            List<Enterprise> enterpriseList = this.enterpriseRepository.findAllByManagerId(managerId);
-            if (enterpriseList == null || enterpriseList.isEmpty()) { return this.getNotEnterpriseContent(); }
+            List<Rate> rateList = this.rateRepository.findAll();
+            if (rateList.isEmpty()) { return this.getNotRateContent(); }
             MessageResponse response = MessageResponse.builder()
                     .code(ResponseConstants.SUCCESS_CODE)
                     .message(ResponseConstants.MSG_SUCCESS_CONS)
-                    .data(enterpriseList)
+                    .data(rateList)
                     .build();
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -62,14 +58,21 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> getAllEnterprisesPaginated(Long managerId, Pageable pageable) {
+    public ResponseEntity<MessageResponse> getAllRate(String typeRateName) {
         try {
-            Page<Enterprise> enterprisePage = this.enterpriseRepository.findAllByManagerId(managerId, pageable);
-            if (enterprisePage == null || enterprisePage.isEmpty()) { return this.getNotEnterpriseContent(); }
+            // Identify Type Rate
+            ERate typeRate = switch (typeRateName) {
+                case "RATE_NOMINAL" -> ERate.RATE_NOMINAL;
+                case "RATE_EFFECTIVE" -> ERate.RATE_EFFECTIVE;
+                default -> throw new RuntimeException("Not fount Type Rate");
+            };
+
+            List<Rate> rateList = this.rateRepository.findAllByTypeRateName(typeRate);
+            if (rateList == null || rateList.isEmpty()) { return this.getNotRateContent(); }
             MessageResponse response = MessageResponse.builder()
                     .code(ResponseConstants.SUCCESS_CODE)
                     .message(ResponseConstants.MSG_SUCCESS_CONS)
-                    .data(enterprisePage)
+                    .data(rateList)
                     .build();
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -86,43 +89,71 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> addEnterprise(EnterpriseRequest enterprise, Long economicActivityId, Long managerId) {
+    public ResponseEntity<MessageResponse> getAllRatePaginated(String typeRateName, Pageable pageable) {
         try {
-            // Validate if Economic Activity Exists
-            EconomicActivity economicActivity = this.economicActivityRepository.findById(economicActivityId).orElse(null);
-            if (economicActivity == null) {
+            // Identify Type Rate
+            ERate typeRate = switch (typeRateName) {
+                case "RATE_NOMINAL" -> ERate.RATE_NOMINAL;
+                case "RATE_EFFECTIVE" -> ERate.RATE_EFFECTIVE;
+                default -> throw new RuntimeException("Not fount Type Rate");
+            };
+
+            Page<Rate> ratePage = this.rateRepository.findAllByTypeRateName(typeRate, pageable);
+            if (ratePage == null || ratePage.isEmpty()) { return this.getNotRateContent(); }
+            MessageResponse response = MessageResponse.builder()
+                    .code(ResponseConstants.SUCCESS_CODE)
+                    .message(ResponseConstants.MSG_SUCCESS_CONS)
+                    .data(ratePage)
+                    .build();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(MessageResponse.builder()
+                            .code(ResponseConstants.ERROR_CODE)
+                            .message("Internal Error: " + sw.toString())
+                            .build());
+        }
+    }
+
+    @Override
+    public ResponseEntity<MessageResponse> addRate(RateRequest rate, String typeRateName) {
+        try {
+            // Create New Rate
+            Rate saveRate = this.convertToEntity(rate);
+
+            // Identify Type Rate
+            TypeRate typeRate;
+            if (typeRateName == null){
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body(MessageResponse.builder()
                                 .code(ResponseConstants.ERROR_CODE)
-                                .message("Don't exists economic activity with ID: " + economicActivityId)
+                                .message("Sorry, Type Rate not found")
                                 .build());
+            } else {
+                typeRate = switch (typeRateName) {
+                    case "RATE_NOMINAL" -> typeRateRepository.findByName(ERate.RATE_NOMINAL)
+                            .orElseThrow(() -> new RuntimeException("Sorry, Type Rate not found"));
+                    case "RATE_EFFECTIVE" -> typeRateRepository.findByName(ERate.RATE_EFFECTIVE)
+                            .orElseThrow(() -> new RuntimeException("Sorry, Type Rate not found"));
+                    default -> throw new RuntimeException("Sorry, Type Rate is wrong.");
+                };
             }
 
-            // Validate if Manager Exists
-            User manager = this.userRepository.findById(managerId).orElse(null);
-            if (manager == null) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(MessageResponse.builder()
-                                .code(ResponseConstants.ERROR_CODE)
-                                .message("Don't exists boss with ID: " + managerId)
-                                .build());
-            }
-
-            // Validate Complete
-            Enterprise saveEnterprise = this.convertToEntity(enterprise);
-            // Set Economic Activity & Manager
-            saveEnterprise.setEconomicActivity(economicActivity);
-            saveEnterprise.setManager(manager);
-            // Save Enterprise
-            enterpriseRepository.save(saveEnterprise);
+            // Set Type Rate
+            saveRate.setTypeRate(typeRate);
+            // Save Rate
+            rateRepository.save(saveRate);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(MessageResponse.builder()
                             .code(ResponseConstants.SUCCESS_CODE)
                             .message("Successful creation request")
-                            .data(this.convertToResource(saveEnterprise))
+                            .data(this.convertToResource(saveRate))
                             .build());
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -138,50 +169,37 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> updateEnterprise(EnterpriseRequest enterprise, Long economicActivityId, Long enterpriseId) {
+    public ResponseEntity<MessageResponse> updateRate(RateRequest rate, Long rateId) {
         try {
-            // Validate if Enterprise Exists
-            Enterprise saveEnterprise = this.enterpriseRepository.findById(enterpriseId).orElse(null);
-            if (saveEnterprise == null) {
+            // Validate if Rate Exists
+            Rate saveRate = this.rateRepository.findById(rateId).orElse(null);
+            if (saveRate == null) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body(MessageResponse.builder()
                                 .code(ResponseConstants.ERROR_CODE)
-                                .message("Don't exists enterprise with ID: " + enterpriseId)
+                                .message("Don't exists rate with ID: " + rateId)
                                 .build());
             }
 
-            // Validate if Economic Activity Exists
-            EconomicActivity economicActivity;
-            if (economicActivityId != null){
-                economicActivity = this.economicActivityRepository.findById(economicActivityId).orElse(null);
-                if (economicActivity == null) {
-                    return ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body(MessageResponse.builder()
-                                    .code(ResponseConstants.ERROR_CODE)
-                                    .message("Don't exists economic activity with ID: " + economicActivityId)
-                                    .build());
-                }
-            } else {
-                economicActivity = saveEnterprise.getEconomicActivity();
+            // Update Rate Data
+            saveRate.setDaysRate(rate.getDaysRate());
+            saveRate.setPeriodRate(rate.getPeriodRate());
+            saveRate.setDaysRate(rate.getDaysRate());
+            saveRate.setValueRate(rate.getValueRate());
+            saveRate.setDiscountAt(rate.getDiscountAt());
+            if (saveRate.getTypeRate().getName().toString().equals("RATE_NOMINAL")){
+                saveRate.setPeriodCapitalization(rate.getPeriodCapitalization());
+                saveRate.setDaysCapitalization(rate.getDaysCapitalization());
             }
-
-            // Update Enterprise Data
-            saveEnterprise.setRuc(enterprise.getRuc());
-            saveEnterprise.setName(enterprise.getName());
-            saveEnterprise.setEmail(enterprise.getEmail());
-            saveEnterprise.setAddress(enterprise.getAddress());
-            saveEnterprise.setPhone(enterprise.getPhone());
-            saveEnterprise.setEconomicActivity(economicActivity);
             // Save Update
-            saveEnterprise = enterpriseRepository.save(saveEnterprise);
+            saveRate = rateRepository.save(saveRate);
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(MessageResponse.builder()
                             .code(ResponseConstants.SUCCESS_CODE)
                             .message("Successful update")
-                            .data(this.convertToResource(saveEnterprise))
+                            .data(this.convertToResource(saveRate))
                             .build());
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -197,27 +215,27 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> deleteEnterprise(Long enterpriseId) {
+    public ResponseEntity<MessageResponse> deleteRate(Long rateId) {
         try {
-            // Validate if Enterprise Exists
-            Enterprise enterprise = this.enterpriseRepository.findById(enterpriseId).orElse(null);
-            if (enterprise == null){
+            // Validate if Rate Exists
+            Rate rate = this.rateRepository.findById(rateId).orElse(null);
+            if (rate == null) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body(MessageResponse.builder()
                                 .code(ResponseConstants.ERROR_CODE)
-                                .message("Don't exists enterprise with ID: " + enterpriseId)
+                                .message("Don't exists rate with ID: " + rateId)
                                 .build());
             }
 
-            // Delete Enterprise
-            enterpriseRepository.delete(enterprise);
+            // Delete Rate
+            rateRepository.delete(rate);
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(MessageResponse.builder()
                             .code(ResponseConstants.SUCCESS_CODE)
                             .message("Successful delete")
-                            .data(this.convertToResource(enterprise))
+                            .data(this.convertToResource(rate))
                             .build());
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -232,16 +250,15 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         }
     }
 
-    private Enterprise convertToEntity(EnterpriseRequest enterprise) { return modelMapper.map(enterprise, Enterprise.class); }
+    private Rate convertToEntity(RateRequest rate) { return modelMapper.map(rate, Rate.class); }
 
-    private SaveEnterpriseRequest convertToResource(Enterprise enterprise) {
-        SaveEnterpriseRequest resource = modelMapper.map(enterprise, SaveEnterpriseRequest.class);
-        resource.setEconomicActivity(enterprise.getEconomicActivity().getName());
-        resource.setManageName(enterprise.getManager().getLastName() + ", " + enterprise.getManager().getName());
+    private SaveRateRequest convertToResource(Rate rate) {
+        SaveRateRequest resource = modelMapper.map(rate, SaveRateRequest.class);
+        resource.setTypeRate(rate.getTypeRate().getName().toString());
         return resource;
     }
 
-    private ResponseEntity<MessageResponse> getNotEnterpriseContent() {
+    private ResponseEntity<MessageResponse> getNotRateContent(){
         return ResponseEntity.status(HttpStatus.OK)
                 .body(MessageResponse.builder()
                         .code(ResponseConstants.WARNING_CODE)

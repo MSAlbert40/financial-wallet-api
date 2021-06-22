@@ -1,17 +1,15 @@
 package com.evertix.financialwallet.config;
 
-import com.evertix.financialwallet.model.EconomicActivity;
-import com.evertix.financialwallet.model.Enterprise;
-import com.evertix.financialwallet.model.Role;
+import com.evertix.financialwallet.model.*;
+import com.evertix.financialwallet.model.enums.ERate;
 import com.evertix.financialwallet.model.enums.ERole;
-import com.evertix.financialwallet.repository.EconomicActivityRepository;
-import com.evertix.financialwallet.repository.EnterpriseRepository;
-import com.evertix.financialwallet.repository.RoleRepository;
-import com.evertix.financialwallet.repository.UserRepository;
+import com.evertix.financialwallet.repository.*;
 import com.evertix.financialwallet.security.request.SignUpRequest;
 import com.evertix.financialwallet.service.AuthService;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Arrays;
 
 @Component
@@ -21,14 +19,19 @@ public class DataLoader {
     private final UserRepository userRepository;
     private final EconomicActivityRepository economicActivityRepository;
     private final EnterpriseRepository enterpriseRepository;
+    private final TypeRateRepository typeRateRepository;
+    private final RateRepository rateRepository;
 
     public DataLoader(RoleRepository roleRepository, AuthService authService, UserRepository userRepository,
-                      EconomicActivityRepository economicActivityRepository, EnterpriseRepository enterpriseRepository) {
+                      EconomicActivityRepository economicActivityRepository, EnterpriseRepository enterpriseRepository,
+                      TypeRateRepository typeRateRepository, RateRepository rateRepository) {
         this.roleRepository = roleRepository;
         this.authService = authService;
         this.userRepository = userRepository;
         this.economicActivityRepository = economicActivityRepository;
         this.enterpriseRepository = enterpriseRepository;
+        this.typeRateRepository = typeRateRepository;
+        this.rateRepository = rateRepository;
         this.loadData();
     }
 
@@ -37,6 +40,29 @@ public class DataLoader {
         this.addUsers();
         this.addEconomicActivities();
         this.addEnterprises();
+        this.addTypeRates();
+        this.addRates();
+    }
+
+    private void addRates() {
+        TypeRate typeRateNominal = typeRateRepository.findByName(ERate.RATE_NOMINAL).orElse(null);
+        Rate rateNominal = new Rate(360, "Anual", 360, new BigDecimal(25), "Mensual",
+                30, LocalDate.parse("2021-04-21"));
+        rateNominal.setTypeRate(typeRateNominal);
+        this.rateRepository.save(rateNominal);
+
+        TypeRate typeRateEffective = typeRateRepository.findByName(ERate.RATE_EFFECTIVE).orElse(null);
+        Rate rateEffective = new Rate(360, "Anual", 360, new BigDecimal(25), "null",
+                0, LocalDate.parse("2021-04-21"));
+        rateEffective.setTypeRate(typeRateEffective);
+        this.rateRepository.save(rateEffective);
+    }
+
+    private void addTypeRates() {
+        this.typeRateRepository.saveAll(Arrays.asList(
+                new TypeRate(ERate.RATE_NOMINAL),
+                new TypeRate(ERate.RATE_EFFECTIVE)
+        ));
     }
 
     private void addEnterprises() {
