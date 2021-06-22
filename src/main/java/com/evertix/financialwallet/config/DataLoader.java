@@ -4,6 +4,7 @@ import com.evertix.financialwallet.model.*;
 import com.evertix.financialwallet.model.enums.EExpense;
 import com.evertix.financialwallet.model.enums.ERate;
 import com.evertix.financialwallet.model.enums.ERole;
+import com.evertix.financialwallet.model.enums.EWallet;
 import com.evertix.financialwallet.repository.*;
 import com.evertix.financialwallet.security.request.SignUpRequest;
 import com.evertix.financialwallet.service.AuthService;
@@ -23,10 +24,12 @@ public class DataLoader {
     private final TypeRateRepository typeRateRepository;
     private final RateRepository rateRepository;
     private final TypeExpenseRepository typeExpenseRepository;
+    private final TypeWalletRepository typeWalletRepository;
 
     public DataLoader(RoleRepository roleRepository, AuthService authService, UserRepository userRepository,
                       EconomicActivityRepository economicActivityRepository, EnterpriseRepository enterpriseRepository,
-                      TypeRateRepository typeRateRepository, RateRepository rateRepository, TypeExpenseRepository typeExpenseRepository) {
+                      TypeRateRepository typeRateRepository, RateRepository rateRepository, TypeExpenseRepository typeExpenseRepository,
+                      TypeWalletRepository typeWalletRepository) {
         this.roleRepository = roleRepository;
         this.authService = authService;
         this.userRepository = userRepository;
@@ -35,6 +38,7 @@ public class DataLoader {
         this.typeRateRepository = typeRateRepository;
         this.rateRepository = rateRepository;
         this.typeExpenseRepository = typeExpenseRepository;
+        this.typeWalletRepository = typeWalletRepository;
         this.loadData();
     }
 
@@ -46,6 +50,15 @@ public class DataLoader {
         this.addTypeRates();
         this.addRates();
         this.addTypeExpenses();
+        this.addWallets();
+    }
+
+    private void addWallets() {
+        this.typeWalletRepository.saveAll(Arrays.asList(
+                new TypeWallet(EWallet.WALLET_LETTERS),
+                new TypeWallet(EWallet.WALLET_BILLS),
+                new TypeWallet(EWallet.WALLET_RECEIPTS_OF_HONORARY)
+        ));
     }
 
     private void addTypeExpenses() {
@@ -77,8 +90,8 @@ public class DataLoader {
     }
 
     private void addEnterprises() {
-        Enterprise firstEnterprise = new Enterprise("145896532", "Coca Cola SAC", "coca.cola@gmail.com", "AV. Arequipa",
-                "940178956");
+        Enterprise firstEnterprise = new Enterprise("145896532", "Coca Cola SAC", "coca.cola@gmail.com", "940178956",
+                "AV.Arequipa");
         firstEnterprise.setEconomicActivity(economicActivityRepository.findByName("Bebidas").orElse(null));
         firstEnterprise.setManager(userRepository.findByUsername("MSAlbert").orElse(null));
         enterpriseRepository.save(firstEnterprise);

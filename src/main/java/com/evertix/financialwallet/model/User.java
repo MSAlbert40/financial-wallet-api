@@ -36,7 +36,7 @@ public class User implements Serializable {
 
     @NotNull(message = "Password cannot be null")
     @NotBlank(message = "Password cannot be blank")
-    @Size(max = 30, message = "Password name must be less than 120 characters")
+    @Size(max = 120, message = "Password name must be less than 120 characters")
     private String password;
 
     @Column(unique = true)
