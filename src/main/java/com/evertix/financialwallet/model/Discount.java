@@ -76,7 +76,7 @@ public class Discount implements Serializable {
     private BigDecimal valueDelivered;
 
     @DecimalMin(value = "0.00")
-    @Digits(integer = 3, fraction = 7)
+    @Digits(integer = 4, fraction = 7)
     private BigDecimal TCEA;
 
     public Discount(LocalDate initialAt, LocalDate expirationAt, BigDecimal valueNominal, BigDecimal retention) {

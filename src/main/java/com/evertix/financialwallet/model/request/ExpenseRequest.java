@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 
 @Data
 public class ExpenseRequest {
-    @Column(unique = true)
     @NotNull(message = "Period Rate cannot be null")
     @NotBlank(message = "Period Rate cannot be blank")
     @Size(max = 50)
@@ -20,6 +19,6 @@ public class ExpenseRequest {
     private String typeValue;
 
     @DecimalMin(value = "0.00")
-    @Digits(integer = 2, fraction = 2)
+    @Digits(integer = 6, fraction = 2)
     private BigDecimal value;
 }

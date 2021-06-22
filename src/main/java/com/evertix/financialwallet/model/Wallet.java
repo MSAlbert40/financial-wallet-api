@@ -39,7 +39,7 @@ public class Wallet implements Serializable {
     private BigDecimal valueTotalDelivered;
 
     @DecimalMin(value = "0.00")
-    @Digits(integer = 3, fraction = 7)
+    @Digits(integer = 4, fraction = 7)
     private BigDecimal valueTCEA;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
@@ -57,8 +57,14 @@ public class Wallet implements Serializable {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Rate rate;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "operations",
+            joinColumns = {@JoinColumn(name = "wallet_id")},
+            inverseJoinColumns = {@JoinColumn(name = "expense_id")})
+    private List<Expense> expenses;
+
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "transaction",
             joinColumns = {@JoinColumn(name = "wallet_id")},
             inverseJoinColumns = {@JoinColumn(name = "discount_id")})
     private List<Discount> discounts;

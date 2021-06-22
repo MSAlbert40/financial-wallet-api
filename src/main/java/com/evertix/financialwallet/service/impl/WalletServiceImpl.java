@@ -4,6 +4,7 @@ import com.evertix.financialwallet.controller.commons.MessageResponse;
 import com.evertix.financialwallet.controller.constants.ResponseConstants;
 import com.evertix.financialwallet.model.*;
 import com.evertix.financialwallet.model.dto.SaveWalletRequest;
+import com.evertix.financialwallet.model.enums.EExpense;
 import com.evertix.financialwallet.model.enums.EWallet;
 import com.evertix.financialwallet.model.request.WalletRequest;
 import com.evertix.financialwallet.repository.*;
@@ -42,6 +43,9 @@ public class WalletServiceImpl implements WalletService {
 
     @Autowired
     RateRepository rateRepository;
+
+    @Autowired
+    ExpenseRepository expenseRepository;
 
     @Autowired
     WalletRepository walletRepository;
@@ -263,6 +267,44 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
+    public ResponseEntity<MessageResponse> addExpenses(Long walletId, Long expenseId) {
+        try {
+            // Validate if Wallet Exists
+            Wallet wallet = this.walletRepository.findById(walletId).orElse(null);
+            if (wallet == null) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(MessageResponse.builder()
+                                .code(ResponseConstants.ERROR_CODE)
+                                .message("Don't exists wallet with ID: " + walletId)
+                                .build());
+            }
+
+            // Validate if Expense Exists
+            Expense expense = this.expenseRepository.findById(expenseId).orElse(null);
+            if (!wallet.getExpenses().contains(expense)) { wallet.getExpenses().add(expense); }
+            walletRepository.save(wallet);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(MessageResponse.builder()
+                            .code(ResponseConstants.SUCCESS_CODE)
+                            .message("Successful Add Discounts")
+                            .data(this.convertToResource(wallet))
+                            .build());
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(MessageResponse.builder()
+                            .code(ResponseConstants.ERROR_CODE)
+                            .message("Internal Error: " + sw.toString())
+                            .build());
+        }
+    }
+
+    @Override
     public ResponseEntity<MessageResponse> addDiscounts(Long walletId, Long discountId) {
         try {
             // Validate if Wallet Exists
@@ -275,8 +317,9 @@ public class WalletServiceImpl implements WalletService {
                                 .message("Don't exists wallet with ID: " + walletId)
                                 .build());
             }
-            // List<Discount> discountList = new ArrayList<>();
+
             BigDecimal valueTCEA;
+            // Validate if Discount Exists
             Discount discount = this.discountRepository.findById(discountId).orElse(null);
             if (!wallet.getDiscounts().contains(discount)) {
                 wallet.getDiscounts().add(discount);
@@ -317,14 +360,15 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public void financialOperation(Wallet wallet, Discount discount) {
         Integer daysPeriod;
-        BigDecimal rateEffective, rateDiscount, TCEA;
+        BigDecimal rateEffective, rateDiscount, TCEA, expenseInitial, expenseFinal;
         BigDecimal valueDiscount, valueNet, valueReceived, valueDelivered;
         switch (wallet.getRate().getTypeRate().getName().toString()) {
             case "RATE_NOMINAL":
                 daysPeriod = daysPeriod(discount.getExpirationAt(), wallet.getRate().getDiscountAt());
                 discount.setDaysPeriod(daysPeriod);
 
-                rateEffective = rateEffectiveNominal(daysPeriod, wallet.getRate().getValueRate(), wallet.getRate().getDaysRate(), wallet.getRate().getDaysCapitalization());
+                rateEffective = rateEffectiveNominal(daysPeriod, wallet.getRate().getValueRate(), wallet.getRate().getDaysRate(),
+                        wallet.getRate().getDaysCapitalization());
                 discount.setRateEffective(rateEffective.setScale(7, RoundingMode.HALF_EVEN));
 
                 rateDiscount = rateDiscount(rateEffective);
@@ -333,17 +377,23 @@ public class WalletServiceImpl implements WalletService {
                 valueDiscount = valueDiscount(discount.getValueNominal(), rateDiscount);
                 discount.setValueDiscount(valueDiscount.setScale(2, RoundingMode.HALF_EVEN));
 
+                expenseInitial = expenseInitial(wallet.getExpenses(), discount.getValueNominal());
+                discount.setExpenseInitial(expenseInitial.setScale(2, RoundingMode.HALF_EVEN));
+
+                expenseFinal = expenseFinal(wallet.getExpenses(), discount.getValueNominal());
+                discount.setExpenseFinal(expenseFinal.setScale(2, RoundingMode.HALF_EVEN));
+
                 valueNet = valueNet(discount.getValueNominal(), valueDiscount);
                 discount.setValueNet(valueNet.setScale(2, RoundingMode.HALF_EVEN));
 
-                valueReceived = valueReceived(valueNet, discount.getRetention());
+                valueReceived = valueReceived(valueNet, expenseInitial, discount.getRetention());
                 discount.setValueReceived(valueReceived.setScale(2, RoundingMode.HALF_EVEN));
 
-                valueDelivered = valueDelivered(discount.getValueNominal(), discount.getRetention());
+                valueDelivered = valueDelivered(discount.getValueNominal(), expenseFinal, discount.getRetention());
                 discount.setValueDelivered(valueDelivered.setScale(2, RoundingMode.HALF_EVEN));
 
-                TCEA = TCEA(valueReceived.setScale(2, RoundingMode.HALF_EVEN), valueDelivered.setScale(2, RoundingMode.HALF_EVEN),
-                        daysPeriod, wallet.getRate().getDaysYear());
+                TCEA = TCEA(valueReceived.setScale(2, RoundingMode.HALF_EVEN),
+                        valueDelivered.setScale(2, RoundingMode.HALF_EVEN), daysPeriod, wallet.getRate().getDaysYear());
                 discount.setTCEA(TCEA.setScale(7, RoundingMode.HALF_EVEN));
                 break;
             case "RATE_EFFECTIVE":
@@ -359,17 +409,23 @@ public class WalletServiceImpl implements WalletService {
                 valueDiscount = valueDiscount(discount.getValueNominal(), rateDiscount);
                 discount.setValueDiscount(valueDiscount.setScale(2, RoundingMode.HALF_EVEN));
 
+                expenseInitial = expenseInitial(wallet.getExpenses(), discount.getValueNominal());
+                discount.setExpenseInitial(expenseInitial.setScale(2, RoundingMode.HALF_EVEN));
+
+                expenseFinal = expenseFinal(wallet.getExpenses(), discount.getValueNominal());
+                discount.setExpenseFinal(expenseFinal.setScale(2, RoundingMode.HALF_EVEN));
+
                 valueNet = valueNet(discount.getValueNominal(), valueDiscount);
                 discount.setValueNet(valueNet.setScale(2, RoundingMode.HALF_EVEN));
 
-                valueReceived = valueReceived(valueNet, discount.getRetention());
+                valueReceived = valueReceived(valueNet, expenseInitial, discount.getRetention());
                 discount.setValueReceived(valueReceived.setScale(2, RoundingMode.HALF_EVEN));
 
-                valueDelivered = valueDelivered(discount.getValueNominal(), discount.getRetention());
+                valueDelivered = valueDelivered(discount.getValueNominal(), expenseFinal, discount.getRetention());
                 discount.setValueDelivered(valueDelivered.setScale(2, RoundingMode.HALF_EVEN));
 
-                TCEA = TCEA(valueReceived.setScale(2, RoundingMode.HALF_EVEN), valueDelivered.setScale(2, RoundingMode.HALF_EVEN),
-                        daysPeriod, wallet.getRate().getDaysYear());
+                TCEA = TCEA(valueReceived.setScale(2, RoundingMode.HALF_EVEN),
+                        valueDelivered.setScale(2, RoundingMode.HALF_EVEN), daysPeriod, wallet.getRate().getDaysYear());
                 discount.setTCEA(TCEA.setScale(7, RoundingMode.HALF_EVEN));
                 break;
             default: break;
@@ -413,20 +469,48 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
+    public BigDecimal expenseInitial(List<Expense> expenses, BigDecimal valueNominal) {
+        double expenseInitial = 0;
+        for (Expense expense: expenses) {
+            if (expense.getTypeExpense().getName() == EExpense.EXPENSE_INITIAL) {
+                if (expense.getTypeValue().equals("Percentage")){
+                    expenseInitial = expenseInitial + (expense.getValue().doubleValue() * valueNominal.doubleValue());
+                }
+                else if (expense.getTypeValue().equals("Cash")) expenseInitial = expenseInitial + expense.getValue().doubleValue();
+            }
+        }
+        return new BigDecimal(expenseInitial);
+    }
+
+    @Override
+    public BigDecimal expenseFinal(List<Expense> expenses, BigDecimal valueNominal) {
+        double expenseFinal = 0;
+        for (Expense expense: expenses) {
+            if (expense.getTypeExpense().getName() == EExpense.EXPENSE_FINAL) {
+                if (expense.getTypeValue().equals("Percentage")){
+                    expenseFinal = expenseFinal + (expense.getValue().doubleValue() * valueNominal.doubleValue());
+                }
+                else if (expense.getTypeValue().equals("Cash")) expenseFinal = expenseFinal + expense.getValue().doubleValue();
+            }
+        }
+        return new BigDecimal(expenseFinal);
+    }
+
+    @Override
     public BigDecimal valueNet(BigDecimal valueNominal, BigDecimal valueDiscount) {
         double valueNet = valueNominal.doubleValue() - valueDiscount.doubleValue();
         return new BigDecimal(valueNet);
     }
 
     @Override
-    public BigDecimal valueReceived(BigDecimal valueNet, BigDecimal retention) {
-        double valueReceived = valueNet.doubleValue() - retention.doubleValue();
+    public BigDecimal valueReceived(BigDecimal valueNet, BigDecimal expenseInitial, BigDecimal retention) {
+        double valueReceived = valueNet.doubleValue() - expenseInitial.doubleValue() - retention.doubleValue();
         return new BigDecimal(valueReceived);
     }
 
     @Override
-    public BigDecimal valueDelivered(BigDecimal valueNominal, BigDecimal retention) {
-        double valueDelivered = valueNominal.doubleValue() - retention.doubleValue();
+    public BigDecimal valueDelivered(BigDecimal valueNominal, BigDecimal expenseFinal, BigDecimal retention) {
+        double valueDelivered = valueNominal.doubleValue() + expenseFinal.doubleValue() - retention.doubleValue();
         return new BigDecimal(valueDelivered);
     }
 
