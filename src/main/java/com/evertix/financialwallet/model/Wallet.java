@@ -62,9 +62,7 @@ public class Wallet implements Serializable {
     @JsonIgnore
     private List<Expense> expenses;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(name = "operations",
-            joinColumns = {@JoinColumn(name = "wallet_id")},
-            inverseJoinColumns = {@JoinColumn(name = "discount_id")})
+    @OneToMany(mappedBy = "wallet")
+    @JsonIgnore
     private List<Discount> discounts;
 }

@@ -18,7 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @CrossOrigin
 @Tag(name = "Wallet", description = "API is Ready")
@@ -82,14 +81,5 @@ public class WalletController {
                                                @RequestParam Long enterpriseId,
                                                @RequestParam Long rateId) {
         return this.walletService.addWallet(wallet, typeWallet, enterpriseId, rateId);
-    }
-
-    @PostMapping("/addDiscounts")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Add Discounts in Wallet", description = "Add Discounts in Wallet",
-            security = @SecurityRequirement(name = "bearerAuth"), tags = {"Wallet"})
-    public ResponseEntity<MessageResponse> addDiscountsArray(@RequestParam Long walletId,
-                                                        @RequestParam Long discountId) {
-        return this.walletService.addDiscounts(walletId, discountId);
     }
 }
