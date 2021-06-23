@@ -11,6 +11,6 @@ import java.util.List;
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
-    List<Expense> findAllByTypeExpenseName(EExpense name);
-    Page<Expense> findAllByTypeExpenseName(EExpense name, Pageable pageable);
+    List<Expense> findAllByTypeExpenseNameAndWalletId(EExpense name, Long walletId);
+    Page<Expense> findAllByTypeExpenseNameAndWalletId(EExpense name, Long walletId, Pageable pageable);
 }

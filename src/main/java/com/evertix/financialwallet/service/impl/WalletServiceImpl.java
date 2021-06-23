@@ -267,44 +267,6 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> addExpenses(Long walletId, Long expenseId) {
-        try {
-            // Validate if Wallet Exists
-            Wallet wallet = this.walletRepository.findById(walletId).orElse(null);
-            if (wallet == null) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(MessageResponse.builder()
-                                .code(ResponseConstants.ERROR_CODE)
-                                .message("Don't exists wallet with ID: " + walletId)
-                                .build());
-            }
-
-            // Validate if Expense Exists
-            Expense expense = this.expenseRepository.findById(expenseId).orElse(null);
-            if (!wallet.getExpenses().contains(expense)) { wallet.getExpenses().add(expense); }
-            walletRepository.save(wallet);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(MessageResponse.builder()
-                            .code(ResponseConstants.SUCCESS_CODE)
-                            .message("Successful Add Discounts")
-                            .data(this.convertToResource(wallet))
-                            .build());
-        } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(MessageResponse.builder()
-                            .code(ResponseConstants.ERROR_CODE)
-                            .message("Internal Error: " + sw.toString())
-                            .build());
-        }
-    }
-
-    @Override
     public ResponseEntity<MessageResponse> addDiscounts(Long walletId, Long discountId) {
         try {
             // Validate if Wallet Exists

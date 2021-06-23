@@ -1,5 +1,6 @@
 package com.evertix.financialwallet.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -57,14 +58,12 @@ public class Wallet implements Serializable {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Rate rate;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(name = "operations",
-            joinColumns = {@JoinColumn(name = "wallet_id")},
-            inverseJoinColumns = {@JoinColumn(name = "expense_id")})
+    @OneToMany(mappedBy = "wallet")
+    @JsonIgnore
     private List<Expense> expenses;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(name = "transaction",
+    @JoinTable(name = "operations",
             joinColumns = {@JoinColumn(name = "wallet_id")},
             inverseJoinColumns = {@JoinColumn(name = "discount_id")})
     private List<Discount> discounts;

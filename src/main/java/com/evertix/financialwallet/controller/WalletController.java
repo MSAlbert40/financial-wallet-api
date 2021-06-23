@@ -84,15 +84,6 @@ public class WalletController {
         return this.walletService.addWallet(wallet, typeWallet, enterpriseId, rateId);
     }
 
-    @PostMapping("/addExpenses")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Add Expenses in Wallet", description = "Add Expenses in Wallet",
-            security = @SecurityRequirement(name = "bearerAuth"), tags = {"Wallet"})
-    public ResponseEntity<MessageResponse> addExpensesArray(@RequestParam Long walletId,
-                                                       @RequestParam Long expenseId) {
-        return this.walletService.addExpenses(walletId, expenseId);
-    }
-
     @PostMapping("/addDiscounts")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Add Discounts in Wallet", description = "Add Discounts in Wallet",

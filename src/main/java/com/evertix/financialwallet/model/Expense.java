@@ -1,5 +1,6 @@
 package com.evertix.financialwallet.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +12,7 @@ import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "expenses")
@@ -41,6 +43,11 @@ public class Expense implements Serializable {
     @JoinColumn(name = "typeExpense_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private TypeExpense typeExpense;
+
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "wallet_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Wallet wallet;
 
     public Expense(String reason, String typeValue, BigDecimal value) {
         this.reason = reason;
