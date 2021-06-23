@@ -1,6 +1,5 @@
 package com.evertix.financialwallet.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +14,6 @@ import javax.validation.constraints.Max;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Table(name = "discounts")
@@ -81,9 +79,10 @@ public class Discount implements Serializable {
     @Digits(integer = 4, fraction = 7)
     private BigDecimal TCEA;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "discounts")
-    @JsonIgnore
-    private List<Wallet> wallets;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "wallet_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Wallet wallet;
 
     public Discount(LocalDate initialAt, LocalDate expirationAt, BigDecimal valueNominal, BigDecimal retention) {
         this.initialAt = initialAt;
