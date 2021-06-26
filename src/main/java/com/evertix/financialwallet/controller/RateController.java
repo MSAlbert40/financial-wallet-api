@@ -67,8 +67,9 @@ public class RateController {
     @Operation(summary = "Add Rate", description = "Add Rate",
             security = @SecurityRequirement(name = "bearerAuth"), tags = {"Rate"})
     public ResponseEntity<MessageResponse> add(@RequestBody @Valid RateRequest rate,
-                                               @RequestParam String typeRate) {
-        return this.rateService.addRate(rate, typeRate);
+                                               @RequestParam String typeRate,
+                                               @RequestParam Long wallet) {
+        return this.rateService.addRate(rate, typeRate, wallet);
     }
 
     @PutMapping("/{rateId}")

@@ -9,7 +9,7 @@ public interface RateService {
     ResponseEntity<MessageResponse> getAllRate();
     ResponseEntity<MessageResponse> getAllRate(String typeRateName);
     ResponseEntity<MessageResponse> getAllRatePaginated(String typeRateName, Pageable pageable);
-    ResponseEntity<MessageResponse> addRate(RateRequest rate, String typeRateName);
+    ResponseEntity<MessageResponse> addRate(RateRequest rate, String typeRateName, Long walletId);
     ResponseEntity<MessageResponse> updateRate(RateRequest rate, Long rateId);
     ResponseEntity<MessageResponse> deleteRate(Long rateId);
 }

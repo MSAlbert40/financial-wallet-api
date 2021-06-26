@@ -55,6 +55,11 @@ public class Rate implements Serializable {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private TypeRate typeRate;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "wallet_id", referencedColumnName = "id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Wallet wallet;
+
     public Rate(Integer daysYear, String periodRate, Integer daysRate, BigDecimal valueRate,
                 String periodCapitalization, Integer daysCapitalization, LocalDate discountAt) {
         this.daysYear = daysYear;

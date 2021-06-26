@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 public class SaveDiscountRequest {
+    private String documentName;
     private LocalDate initialAt;
     private LocalDate expirationAt;
     private BigDecimal valueNominal;

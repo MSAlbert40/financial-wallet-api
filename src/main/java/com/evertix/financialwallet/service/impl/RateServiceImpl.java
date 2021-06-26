@@ -4,11 +4,13 @@ import com.evertix.financialwallet.controller.commons.MessageResponse;
 import com.evertix.financialwallet.controller.constants.ResponseConstants;
 import com.evertix.financialwallet.model.Rate;
 import com.evertix.financialwallet.model.TypeRate;
+import com.evertix.financialwallet.model.Wallet;
 import com.evertix.financialwallet.model.dto.SaveRateRequest;
 import com.evertix.financialwallet.model.enums.ERate;
 import com.evertix.financialwallet.model.request.RateRequest;
 import com.evertix.financialwallet.repository.RateRepository;
 import com.evertix.financialwallet.repository.TypeRateRepository;
+import com.evertix.financialwallet.repository.WalletRepository;
 import com.evertix.financialwallet.service.RateService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,9 @@ public class RateServiceImpl implements RateService {
 
     @Autowired
     TypeRateRepository typeRateRepository;
+
+    @Autowired
+    WalletRepository walletRepository;
 
     @Autowired
     RateRepository rateRepository;
@@ -120,10 +125,18 @@ public class RateServiceImpl implements RateService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> addRate(RateRequest rate, String typeRateName) {
+    public ResponseEntity<MessageResponse> addRate(RateRequest rate, String typeRateName, Long walletId) {
         try {
-            // Create New Rate
-            Rate saveRate = this.convertToEntity(rate);
+            // Validate if Rate Exists
+            Wallet wallet = this.walletRepository.findById(walletId).orElse(null);
+            if (wallet == null) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(MessageResponse.builder()
+                                .code(ResponseConstants.ERROR_CODE)
+                                .message("Don't exists wallet with ID: " + walletId)
+                                .build());
+            }
 
             // Identify Type Rate
             TypeRate typeRate;
@@ -144,8 +157,12 @@ public class RateServiceImpl implements RateService {
                 };
             }
 
-            // Set Type Rate
+            // Create New Rate
+            Rate saveRate = this.convertToEntity(rate);
+
+            // Set Type Rate & Wallet
             saveRate.setTypeRate(typeRate);
+            saveRate.setWallet(wallet);
             // Save Rate
             rateRepository.save(saveRate);
             return ResponseEntity
