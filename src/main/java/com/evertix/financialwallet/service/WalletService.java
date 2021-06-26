@@ -10,5 +10,5 @@ public interface WalletService {
     ResponseEntity<MessageResponse> getWallet(Long walletId);
     ResponseEntity<MessageResponse> getAllWallet(String typeWallet, Long enterpriseId);
     ResponseEntity<MessageResponse> getAllWalletPaginated(String typeWallet, Long enterpriseId, Pageable pageable);
-    ResponseEntity<MessageResponse> addWallet(WalletRequest wallet, String typeWallet, Long enterpriseId, Long rateId);
+    ResponseEntity<MessageResponse> addWallet(WalletRequest wallet, Long enterpriseId);
 }

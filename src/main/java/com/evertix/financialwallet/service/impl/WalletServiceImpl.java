@@ -33,9 +33,6 @@ public class WalletServiceImpl implements WalletService {
     TypeWalletRepository typeWalletRepository;
 
     @Autowired
-    RateRepository rateRepository;
-
-    @Autowired
     WalletRepository walletRepository;
 
     @Override
@@ -176,19 +173,8 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> addWallet(WalletRequest wallet, String typeWallet, Long enterpriseId, Long rateId) {
+    public ResponseEntity<MessageResponse> addWallet(WalletRequest wallet, Long enterpriseId) {
         try {
-            // Validate if Rate Exists
-            Rate rate = this.rateRepository.findById(rateId).orElse(null);
-            if (rate == null) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(MessageResponse.builder()
-                                .code(ResponseConstants.ERROR_CODE)
-                                .message("Don't exists rate with ID: " + rateId)
-                                .build());
-            }
-
             // Validate if Enterprise Exists
             Enterprise enterprise = this.enterpriseRepository.findById(enterpriseId).orElse(null);
             if (enterprise == null) {
@@ -200,33 +186,10 @@ public class WalletServiceImpl implements WalletService {
                                 .build());
             }
 
-            // Identify Type Wallet
-            TypeWallet typeWallets;
-            if (typeWallet == null) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(MessageResponse.builder()
-                                .code(ResponseConstants.ERROR_CODE)
-                                .message("Sorry, Type Wallet not found")
-                                .build());
-            } else {
-                typeWallets = switch (typeWallet) {
-                    case "WALLET_LETTERS" -> typeWalletRepository.findAllByName(EWallet.WALLET_LETTERS)
-                            .orElseThrow(() -> new RuntimeException("Sorry, Type Wallet not found"));
-                    case "WALLET_BILLS" -> typeWalletRepository.findAllByName(EWallet.WALLET_BILLS)
-                            .orElseThrow(() -> new RuntimeException("Sorry, Type Wallet not found"));
-                    case "WALLET_RECEIPTS_OF_HONORARY" -> typeWalletRepository.findAllByName(EWallet.WALLET_RECEIPTS_OF_HONORARY)
-                            .orElseThrow(() -> new RuntimeException("Sorry, Type Wallet not found"));
-                    default -> throw new RuntimeException("Sorry, Type Wallet is wrong.");
-                };
-            }
-
             // Complete Validation
             Wallet saveWallet = this.convertToEntity(wallet);
-            // Set Type Wallet, Enterprise & Rate
-            saveWallet.setTypeWallet(typeWallets);
+            // Enterprise
             saveWallet.setEnterprise(enterprise);
-            saveWallet.setRate(rate);
             // Initial Variable
             saveWallet.setValueTotalDelivered(new BigDecimal(0));
             saveWallet.setValueTotalReceived(new BigDecimal(0));
@@ -261,8 +224,7 @@ public class WalletServiceImpl implements WalletService {
     private SaveWalletRequest convertToResource(Wallet wallet) {
         SaveWalletRequest resource = modelMapper.map(wallet, SaveWalletRequest.class);
         resource.setEnterprise(wallet.getEnterprise().getName());
-        resource.setTypeWallet(wallet.getTypeWallet().getName().toString());
-        resource.setRate(wallet.getRate().getTypeRate().getName().toString());
+        if (resource.getTypeWallet() != null) resource.setTypeWallet(wallet.getTypeWallet().getName().toString());
         return resource;
     }
 

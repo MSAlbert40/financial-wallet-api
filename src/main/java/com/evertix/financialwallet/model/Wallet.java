@@ -43,8 +43,8 @@ public class Wallet implements Serializable {
     @Digits(integer = 4, fraction = 7)
     private BigDecimal valueTCEA;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "typeWallet_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "typeWallet_id", nullable = true)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private TypeWallet typeWallet;
 
@@ -53,9 +53,8 @@ public class Wallet implements Serializable {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Enterprise enterprise;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "rade_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToOne(mappedBy = "wallet")
+    @JsonIgnore
     private Rate rate;
 
     @OneToMany(mappedBy = "wallet")

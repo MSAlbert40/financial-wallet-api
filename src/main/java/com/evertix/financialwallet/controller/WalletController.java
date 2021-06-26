@@ -77,9 +77,7 @@ public class WalletController {
     @Operation(summary = "Add Wallet", description = "Add Wallet",
             security = @SecurityRequirement(name = "bearerAuth"), tags = {"Wallet"})
     public ResponseEntity<MessageResponse> add(@RequestBody @Valid WalletRequest wallet,
-                                               @RequestParam String typeWallet,
-                                               @RequestParam Long enterpriseId,
-                                               @RequestParam Long rateId) {
-        return this.walletService.addWallet(wallet, typeWallet, enterpriseId, rateId);
+                                               @RequestParam Long enterpriseId) {
+        return this.walletService.addWallet(wallet, enterpriseId);
     }
 }

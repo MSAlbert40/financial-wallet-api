@@ -13,5 +13,4 @@ public class SaveWalletRequest {
     private BigDecimal valueTCEA;
     private String typeWallet;
     private String enterprise;
-    private String rate;
 }
