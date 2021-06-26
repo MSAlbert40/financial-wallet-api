@@ -7,8 +7,10 @@ import com.evertix.financialwallet.model.Expense;
 import com.evertix.financialwallet.model.Wallet;
 import com.evertix.financialwallet.model.dto.SaveDiscountRequest;
 import com.evertix.financialwallet.model.enums.EExpense;
+import com.evertix.financialwallet.model.enums.EWallet;
 import com.evertix.financialwallet.model.request.DiscountRequest;
 import com.evertix.financialwallet.repository.DiscountRepository;
+import com.evertix.financialwallet.repository.TypeWalletRepository;
 import com.evertix.financialwallet.repository.WalletRepository;
 import com.evertix.financialwallet.service.DiscountService;
 import org.modelmapper.ModelMapper;
@@ -32,6 +34,9 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public class DiscountServiceImpl implements DiscountService {
     @Autowired
     ModelMapper modelMapper;
+
+    @Autowired
+    TypeWalletRepository typeWalletRepository;
 
     @Autowired
     WalletRepository walletRepository;
@@ -132,6 +137,8 @@ public class DiscountServiceImpl implements DiscountService {
             BigDecimal valueTCEA;
             // Validate Complete
             Discount saveDiscount = this.convertToEntity(discount);
+            // Identify Type Wallet
+            identifyTypeWallet(saveDiscount, wallet);
             // Financial Operation
             financialOperation(discount, saveDiscount, wallet);
             // Set Wallet
@@ -338,6 +345,35 @@ public class DiscountServiceImpl implements DiscountService {
         double secondStep = valueDelivered.doubleValue() / valueReceived.doubleValue();
         double TCEA = (Math.pow(secondStep, firstStep) - 1) * 100;
         return new BigDecimal(TCEA);
+    }
+
+    private void identifyTypeWallet(Discount discount, Wallet wallet) {
+        boolean identify;
+        if (wallet.getDiscounts().isEmpty()){
+            switch (discount.getDocumentName()) {
+                case "Letter" -> wallet.setTypeWallet(typeWalletRepository.findAllByName(EWallet.WALLET_LETTERS).orElse(null));
+                case "Bill" -> wallet.setTypeWallet(typeWalletRepository.findAllByName(EWallet.WALLET_BILLS).orElse(null));
+                case "Receipt of Honorary" -> wallet.setTypeWallet(typeWalletRepository.findAllByName(EWallet.WALLET_RECEIPTS_OF_HONORARY).orElse(null));
+            }
+        }
+        else {
+            identify = true;
+            for (Discount item: wallet.getDiscounts()) {
+                if (!item.getDocumentName().equals(discount.getDocumentName())) {
+                    identify = false;
+                    break;
+                }
+            }
+            if (identify) {
+                switch (discount.getDocumentName()) {
+                    case "Letter" -> wallet.setTypeWallet(typeWalletRepository.findAllByName(EWallet.WALLET_LETTERS).orElse(null));
+                    case "Bill" -> wallet.setTypeWallet(typeWalletRepository.findAllByName(EWallet.WALLET_BILLS).orElse(null));
+                    case "Receipt of Honorary" -> wallet.setTypeWallet(typeWalletRepository.findAllByName(EWallet.WALLET_RECEIPTS_OF_HONORARY).orElse(null));
+                }
+            }
+            else wallet.setTypeWallet(typeWalletRepository.findAllByName(EWallet.WALLET_MIXED).orElse(null));
+        }
+
     }
 
     private Discount convertToEntity(DiscountRequest discount) { return modelMapper.map(discount, Discount.class); }

@@ -8,6 +8,7 @@ import com.evertix.financialwallet.model.enums.EWallet;
 import com.evertix.financialwallet.repository.*;
 import com.evertix.financialwallet.security.request.SignUpRequest;
 import com.evertix.financialwallet.service.AuthService;
+import org.aspectj.apache.bcel.generic.Type;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -48,7 +49,7 @@ public class DataLoader {
         this.addEconomicActivities();
         this.addEnterprises();
         this.addTypeRates();
-        this.addRates();
+        //this.addRates();
         this.addTypeExpenses();
         this.addWallets();
     }
@@ -57,7 +58,8 @@ public class DataLoader {
         this.typeWalletRepository.saveAll(Arrays.asList(
                 new TypeWallet(EWallet.WALLET_LETTERS),
                 new TypeWallet(EWallet.WALLET_BILLS),
-                new TypeWallet(EWallet.WALLET_RECEIPTS_OF_HONORARY)
+                new TypeWallet(EWallet.WALLET_RECEIPTS_OF_HONORARY),
+                new TypeWallet(EWallet.WALLET_MIXED)
         ));
     }
 
@@ -68,6 +70,7 @@ public class DataLoader {
         ));
     }
 
+    /*
     private void addRates() {
         TypeRate typeRateNominal = typeRateRepository.findByName(ERate.RATE_NOMINAL).orElse(null);
         Rate rateNominal = new Rate(360, "Anual", 360, new BigDecimal(25), "Mensual",
@@ -81,6 +84,7 @@ public class DataLoader {
         rateEffective.setTypeRate(typeRateEffective);
         this.rateRepository.save(rateEffective);
     }
+    */
 
     private void addTypeRates() {
         this.typeRateRepository.saveAll(Arrays.asList(

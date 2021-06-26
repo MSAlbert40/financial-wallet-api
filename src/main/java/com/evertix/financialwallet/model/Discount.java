@@ -8,9 +8,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.Max;
+import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,6 +23,11 @@ public class Discount implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotNull(message = "DocumentName cannot be null")
+    @NotBlank(message = "DocumentName cannot be blank")
+    @Size(max = 30, message = "DocumentName name must be less than 60 characters")
+    private String documentName;
 
     @Column(nullable = false, updatable = false)
     private LocalDate initialAt;

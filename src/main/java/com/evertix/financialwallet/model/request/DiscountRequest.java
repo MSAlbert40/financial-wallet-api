@@ -3,13 +3,17 @@ package com.evertix.financialwallet.model.request;
 import lombok.Data;
 
 import javax.persistence.Column;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Digits;
+import javax.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
 public class DiscountRequest {
+    @NotNull(message = "DocumentName cannot be null")
+    @NotBlank(message = "DocumentName cannot be blank")
+    @Size(max = 30, message = "DocumentName name must be less than 60 characters")
+    private String documentName;
+
     @Column(nullable = false, updatable = false)
     private LocalDate initialAt;
 
