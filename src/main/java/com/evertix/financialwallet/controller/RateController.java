@@ -35,12 +35,12 @@ public class RateController {
         return this.rateService.getAllRate();
     }
 
-    @GetMapping("/")
+    @GetMapping("/{walletId}")
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "View All Rate by Type Rate", description = "View All Rate by Type Rate",
+    @Operation(summary = "View Rate by Type Rate", description = "View Rate by Type Rate",
             security = @SecurityRequirement(name = "bearerAuth"), tags = {"Rate"})
-    public ResponseEntity<MessageResponse> getAll(@RequestParam Long walletId){
-        return this.rateService.getAllRate(walletId);
+    public ResponseEntity<MessageResponse> getAll(@PathVariable Long walletId){
+        return this.rateService.getRate(walletId);
     }
 
     @GetMapping("/paged")

@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface RateService {
     ResponseEntity<MessageResponse> getAllRate();
-    ResponseEntity<MessageResponse> getAllRate(Long walletId);
+    ResponseEntity<MessageResponse> getRate(Long walletId);
     ResponseEntity<MessageResponse> getAllRatePaginated(String typeRateName, Pageable pageable);
     ResponseEntity<MessageResponse> addRate(RateRequest rate, String typeRateName, Long walletId);
     ResponseEntity<MessageResponse> updateRate(RateRequest rate, Long rateId);

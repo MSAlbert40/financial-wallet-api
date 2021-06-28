@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface RateRepository extends JpaRepository<Rate, Long> {
-    List<Rate> findAllByWalletId(Long wallet);
+    Rate findByWalletId(Long wallet);
     List<Rate> findAllByTypeRateName(ERate name);
     Page<Rate> findAllByTypeRateName(ERate name, Pageable pageable);
 }

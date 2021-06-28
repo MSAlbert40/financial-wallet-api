@@ -63,14 +63,13 @@ public class RateServiceImpl implements RateService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> getAllRate(Long walletId) {
+    public ResponseEntity<MessageResponse> getRate(Long walletId) {
         try {
-            List<Rate> rateList = this.rateRepository.findAllByWalletId(walletId);
-            if (rateList == null || rateList.isEmpty()) { return this.getNotRateContent(); }
+            Rate rate = this.rateRepository.findByWalletId(walletId);
             MessageResponse response = MessageResponse.builder()
                     .code(ResponseConstants.SUCCESS_CODE)
                     .message(ResponseConstants.MSG_SUCCESS_CONS)
-                    .data(rateList)
+                    .data(rate)
                     .build();
             return ResponseEntity.ok(response);
         } catch (Exception e) {
