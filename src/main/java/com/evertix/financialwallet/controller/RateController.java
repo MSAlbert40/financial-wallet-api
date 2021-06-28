@@ -37,7 +37,7 @@ public class RateController {
 
     @GetMapping("/{walletId}")
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "View Rate by Type Rate", description = "View Rate by Type Rate",
+    @Operation(summary = "View Rate by Wallet", description = "View Rate by Wallet",
             security = @SecurityRequirement(name = "bearerAuth"), tags = {"Rate"})
     public ResponseEntity<MessageResponse> getAll(@PathVariable Long walletId){
         return this.rateService.getRate(walletId);
