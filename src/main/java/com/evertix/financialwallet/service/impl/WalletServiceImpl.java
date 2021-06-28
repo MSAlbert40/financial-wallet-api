@@ -101,6 +101,7 @@ public class WalletServiceImpl implements WalletService {
                     case "WALLET_LETTERS" -> EWallet.WALLET_LETTERS;
                     case "WALLET_BILLS" -> EWallet.WALLET_BILLS;
                     case "WALLET_RECEIPTS_OF_HONORARY" -> EWallet.WALLET_RECEIPTS_OF_HONORARY;
+                    case "WALLET_MIXED" -> EWallet.WALLET_MIXED;
                     default -> throw new RuntimeException("Sorry, Type Wallet is wrong.");
                 };
             }
@@ -145,6 +146,7 @@ public class WalletServiceImpl implements WalletService {
                     case "WALLET_LETTERS" -> EWallet.WALLET_LETTERS;
                     case "WALLET_BILLS" -> EWallet.WALLET_BILLS;
                     case "WALLET_RECEIPTS_OF_HONORARY" -> EWallet.WALLET_RECEIPTS_OF_HONORARY;
+                    case "WALLET_MIXED" -> EWallet.WALLET_MIXED;
                     default -> throw new RuntimeException("Sorry, Type Wallet is wrong.");
                 };
             }

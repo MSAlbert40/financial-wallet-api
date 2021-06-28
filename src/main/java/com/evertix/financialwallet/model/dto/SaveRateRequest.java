@@ -9,8 +9,8 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 public class SaveRateRequest {
-    private String periodRate;
     private Integer daysRate;
+    private String periodRate;
     private BigDecimal valueRate;
     private String periodCapitalization;
     private Integer daysCapitalization;
