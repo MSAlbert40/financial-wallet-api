@@ -63,16 +63,9 @@ public class RateServiceImpl implements RateService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> getAllRate(String typeRateName) {
+    public ResponseEntity<MessageResponse> getAllRate(Long walletId) {
         try {
-            // Identify Type Rate
-            ERate typeRate = switch (typeRateName) {
-                case "RATE_NOMINAL" -> ERate.RATE_NOMINAL;
-                case "RATE_EFFECTIVE" -> ERate.RATE_EFFECTIVE;
-                default -> throw new RuntimeException("Not fount Type Rate");
-            };
-
-            List<Rate> rateList = this.rateRepository.findAllByTypeRateName(typeRate);
+            List<Rate> rateList = this.rateRepository.findAllByWalletId(walletId);
             if (rateList == null || rateList.isEmpty()) { return this.getNotRateContent(); }
             MessageResponse response = MessageResponse.builder()
                     .code(ResponseConstants.SUCCESS_CODE)

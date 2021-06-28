@@ -39,8 +39,8 @@ public class RateController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "View All Rate by Type Rate", description = "View All Rate by Type Rate",
             security = @SecurityRequirement(name = "bearerAuth"), tags = {"Rate"})
-    public ResponseEntity<MessageResponse> getAll(@RequestParam String typeRate){
-        return this.rateService.getAllRate(typeRate);
+    public ResponseEntity<MessageResponse> getAll(@RequestParam Long walletId){
+        return this.rateService.getAllRate(walletId);
     }
 
     @GetMapping("/paged")
