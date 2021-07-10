@@ -373,7 +373,6 @@ public class DiscountServiceImpl implements DiscountService {
             }
             else wallet.setTypeWallet(typeWalletRepository.findAllByName(EWallet.WALLET_MIXED).orElse(null));
         }
-
     }
 
     private Discount convertToEntity(DiscountRequest discount) { return modelMapper.map(discount, Discount.class); }
